@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { useReactWASMGrid } from './lib/useReactWASMGrid';
+import useReactWASMGrid from './lib/useReactWASMGrid';
 
-const App: React.FC = () => {
-	const [inputData, setInputData] = useState<JSON>();
-	const [outputData, setOutputData] = useState<JSON>();
+const App = () => {
+	const mockGridData = JSON.stringify({ array: [1, 2, 3, 4, 5] });
+	console.log(mockGridData);
 
-	const reactWasmGrid = useReactWASMGrid();
-	const process_data = reactWasmGrid?.process_data;
+	const [inputData, setInputData] = useState<string>(mockGridData);
+	const [outputData, setOutputData] = useState<string>('');
+
+	const processDataWithWasm = useReactWASMGrid();
 
 	const handleProcessData = () => {
-		if (process_data && inputData) {
-			const result = process_data(0, 0, 0); // Update the arguments as per the function signature
-			setOutputData(JSON.parse(result));
+		if (processDataWithWasm && inputData) {
+			try {
+				const result = processDataWithWasm(inputData); // Call the WASM function
+				setOutputData(result);
+			} catch (error) {
+				console.error('Error processing data:', error);
+			}
 		}
 	};
 
@@ -19,11 +25,11 @@ const App: React.FC = () => {
 		<div>
 			<h1>React Rust Grid Demo</h1>
 			<textarea
-				value={JSON.stringify(inputData)}
-				onChange={(e) => setInputData(JSON.parse(e.target.value))}
+				value={inputData}
+				onChange={(e) => setInputData(e.target.value)}
 			/>
 			<button onClick={handleProcessData}>Process Data</button>
-			<pre>{JSON.stringify(outputData)}</pre>
+			<pre>{outputData}</pre>
 		</div>
 	);
 };
