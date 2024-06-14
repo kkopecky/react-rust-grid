@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import init, { process_data } from '../../public/pkg/react_rust_grid_lib';
+import init, { process_data } from '../../public/pkg/react_wasm_grid';
 
 const useReactWASMGrid = () => {
 	const [wasmReady, setWasmReady] = useState(false);

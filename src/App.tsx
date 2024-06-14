@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import useReactWASMGrid from './lib/useReactWASMGrid';
 
 const App = () => {
@@ -10,16 +10,18 @@ const App = () => {
 
 	const processDataWithWasm = useReactWASMGrid();
 
-	const handleProcessData = () => {
+	const handleProcessData = async () => {
 		if (processDataWithWasm && inputData) {
 			try {
-				const result = processDataWithWasm(inputData); // Call the WASM function
+				const result = await processDataWithWasm(inputData); // Call the WASM function
 				setOutputData(result);
 			} catch (error) {
 				console.error('Error processing data:', error);
 			}
 		}
 	};
+
+	const handleClearData = () => setOutputData('');
 
 	return (
 		<div>
@@ -29,6 +31,7 @@ const App = () => {
 				onChange={(e) => setInputData(e.target.value)}
 			/>
 			<button onClick={handleProcessData}>Process Data</button>
+			<button onClick={handleClearData}>Clear Data</button>
 			<pre>{outputData}</pre>
 		</div>
 	);
