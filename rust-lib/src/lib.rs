@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
-use serde::{Serialize, Deserialize};
+use serde_json::Value;
 use js_sys::Promise;
 
 #[wasm_bindgen]
@@ -9,24 +9,29 @@ extern "C" {
     fn log(s: &str);
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RustData {
-    pub array: Vec<i32>,
+#[wasm_bindgen]
+pub enum SortDirection {
+    Ascending,
+    Descending,
 }
 
 // Helper function to perform the async processing
-async fn perform_processing(json_data: String) -> Result<String, JsValue> {
+async fn perform_processing(json_data: String, key: String, direction: SortDirection) -> Result<String, JsValue> {
     log(&format!("Received: {}", json_data));
 
-    // Deserialize JSON data to RustData
-    let data: RustData = serde_json::from_str(&json_data)
+    // Deserialize JSON data to a dynamic Value
+    let mut data: Vec<Value> = serde_json::from_str(&json_data)
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
     
-    // Simulate some async processing work
-    // Replace this with actual async processing logic if needed
-    wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(&JsValue::from_str("processing")))
-        .await
-        .map_err(|e| JsValue::from_str(&e.as_string().unwrap_or_default()))?;
+    // Sort the data
+    data.sort_by(|a, b| {
+        let a_val = a.get(&key).and_then(Value::as_str).unwrap_or_default();
+        let b_val = b.get(&key).and_then(Value::as_str).unwrap_or_default();
+        match direction {
+            SortDirection::Ascending => a_val.cmp(&b_val),
+            SortDirection::Descending => b_val.cmp(&a_val),
+        }
+    });
 
     // Serialize the processed data back to JSON
     let processed_data = serde_json::to_string(&data)
@@ -37,13 +42,15 @@ async fn perform_processing(json_data: String) -> Result<String, JsValue> {
     Ok(processed_data)
 }
 
+
 // Entry function to be called from JavaScript, returning a Promise
 #[wasm_bindgen]
-pub fn process_data(json_data: &str) -> Promise {
-    // Convert `json_data` to `String` to move ownership into the async context
+pub fn process_data(json_data: &str, key: &str, direction: SortDirection) -> Promise {
+    // Convert arguments to String to move ownership into the async context
     let json_data = json_data.to_string();
+    let key = key.to_string();
 
     future_to_promise(async move {
-        perform_processing(json_data.clone()).await.map(|data| JsValue::from_str(&data))
+        perform_processing(json_data, key, direction).await.map(|data| JsValue::from_str(&data))
     })
 }

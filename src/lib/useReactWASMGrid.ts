@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import init, { process_data } from '../../public/pkg/react_wasm_grid';
+import init, {
+	process_data,
+	SortDirection,
+} from '../../public/pkg/react_wasm_grid';
 
 const useReactWASMGrid = () => {
 	const [wasmReady, setWasmReady] = useState(false);
@@ -17,7 +20,10 @@ const useReactWASMGrid = () => {
 		loadWasm();
 	}, []);
 
-	return wasmReady ? process_data : null;
+	return {
+		process_data: wasmReady ? process_data : null,
+		sortDirection: SortDirection,
+	};
 };
 
 export default useReactWASMGrid;
